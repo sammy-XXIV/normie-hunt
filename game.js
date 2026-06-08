@@ -427,18 +427,35 @@ document.getElementById('wallet-picker-cancel').addEventListener('click', functi
   document.getElementById('wallet-picker').style.display = 'none';
 });
 
-// AUTH → DASHBOARD
-document.getElementById('authContinueBtn').addEventListener('click', function() {
-  if (!this.classList.contains('ready')) return;
-  var nameInput = document.getElementById('playerNameInput').value.trim().toUpperCase();
-  playerName = nameInput || 'ANON';
+function showDashboard() {
   var short = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
   document.getElementById('dash-name').textContent = playerName;
   document.getElementById('dash-wallet').textContent = short.toUpperCase();
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-dashboard').style.display = 'flex';
   loadDashboardLeaderboard();
+}
+
+// AUTH → DASHBOARD
+document.getElementById('authContinueBtn').addEventListener('click', function() {
+  if (!this.classList.contains('ready')) return;
+  var nameInput = document.getElementById('playerNameInput').value.trim().toUpperCase();
+  playerName = nameInput || 'ANON';
+  sessionStorage.setItem('nh_wallet', walletAddress);
+  sessionStorage.setItem('nh_name', playerName);
+  showDashboard();
 });
+
+// restore session on reload (skip auth if already connected this tab)
+(function() {
+  var sw = sessionStorage.getItem('nh_wallet');
+  var sn = sessionStorage.getItem('nh_name');
+  if (sw && sn) {
+    walletAddress = sw;
+    playerName = sn;
+    showDashboard();
+  }
+})();
 
 // DASHBOARD LEADERBOARD
 function loadDashboardLeaderboard() {
