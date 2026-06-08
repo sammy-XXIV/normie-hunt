@@ -311,11 +311,15 @@ for (var r=1; r<ROWS-1; r++) {
 // ── Input ──────────────────────────────────────────────────────────────────
 var keys = {};
 window.addEventListener('keydown', function(e) {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
   keys[e.code] = true;
   if (['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))
     e.preventDefault();
 });
-window.addEventListener('keyup', function(e) { keys[e.code] = false; });
+window.addEventListener('keyup', function(e) {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  keys[e.code] = false;
+});
 
 // ── Mouse look + pointer lock ──────────────────────────────────────────────
 var yaw=0, pitch=0;
