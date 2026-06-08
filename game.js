@@ -979,6 +979,7 @@ var wraith = (function() {
   return {
     root: root,
     light: light,
+    vignette: vignette,
     x: x, z: z,
     speed: 4.2,
     t: 0,
