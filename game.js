@@ -965,8 +965,8 @@ var wraith = (function() {
   light.position.set(0, 0.5, 0);
   root.add(light);
 
-  // spawns in left section — close behind the player's start
-  var x = 5*TILE, z = 8*TILE;
+  // spawns mid-map — far from player start so they get time to explore
+  var x = 34*TILE + TILE/2, z = 9*TILE + TILE/2;
   root.position.set(x, 1.2, z);
   scene.add(root);
 
@@ -979,9 +979,9 @@ var wraith = (function() {
     speed: 4.2,
     t: 0,
     active: false,
-    spawnDelay: 5,
+    spawnDelay: 10,
     warned: false,
-    farTimer: 0      // tracks how long it has been stuck far from player
+    farTimer: 0
   };
 })();
 
@@ -1012,7 +1012,7 @@ function updateWraith(dt) {
   // teleport behind player if stuck far away for too long
   if (dist > 30) {
     wraith.farTimer += dt;
-    if (wraith.farTimer > 22) {
+    if (wraith.farTimer > 15) {
       wraith.farTimer = 0;
       // try offsets behind player until a non-wall tile is found
       var offsets = [
