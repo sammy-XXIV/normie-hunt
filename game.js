@@ -446,7 +446,7 @@ document.getElementById('authContinueBtn').addEventListener('click', function() 
   showDashboard();
 });
 
-// restore session on reload (skip auth if already connected this tab)
+// show auth or restore session
 (function() {
   var sw = sessionStorage.getItem('nh_wallet');
   var sn = sessionStorage.getItem('nh_name');
@@ -454,6 +454,8 @@ document.getElementById('authContinueBtn').addEventListener('click', function() 
     walletAddress = sw;
     playerName = sn;
     showDashboard();
+  } else {
+    document.getElementById('screen-auth').style.display = 'flex';
   }
 })();
 
@@ -541,12 +543,79 @@ function takeDamage() {
 function die() {
   isDead = true;
   timerRunning = false;
-  document.exitPointerLock();
+  try { document.exitPointerLock(); } catch(e) {}
   var d = document.createElement('div');
   d.id = 'dead';
-  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ff3333;font-family:monospace;z-index:99;gap:16px';
-  d.innerHTML = '<h1 style="font-size:3rem;letter-spacing:8px">YOU DIED</h1><p style="color:#aaa">The dungeon claimed your soul.</p><button onclick="location.reload()" style="padding:12px 32px;background:transparent;border:1px solid #ff3333;color:#ff3333;font-family:monospace;font-size:1rem;letter-spacing:3px;cursor:pointer">TRY AGAIN</button>';
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ff3333;font-family:monospace;z-index:99;gap:16px';
+  d.innerHTML = '<h1 style="font-size:3rem;letter-spacing:8px;margin-bottom:4px">YOU DIED</h1>'
+    + '<p style="color:#444;letter-spacing:3px;font-size:0.78rem">THE DUNGEON CLAIMED YOUR SOUL</p>'
+    + '<button onclick="returnToDashboard()" style="margin-top:12px;padding:13px 36px;background:transparent;border:1px solid #442222;color:#884444;font-family:monospace;font-size:0.85rem;letter-spacing:4px;cursor:pointer">RETURN TO HUB</button>';
   document.body.appendChild(d);
+}
+
+function resetGame() {
+  // player
+  camera.position.set(3*TILE+TILE/2, 1.65, 16*TILE+TILE/2);
+  yaw = 0; pitch = 0;
+  camera.rotation.set(0, 0, 0);
+
+  // health
+  hp = 3; invincible = 0;
+  ['h1','h2','h3'].forEach(function(id){ document.getElementById(id).style.color='#cc3333'; });
+
+  // flags
+  isDead = false; gameStarted = false; elapsed = 0; timerRunning = false;
+  document.getElementById('timer').textContent = '00:00';
+
+  // fragments
+  fragmentsCollected = 0;
+  document.getElementById('frag-count').textContent = '0 / ' + TOTAL_FRAGMENTS;
+  fragments.forEach(function(f) {
+    f.collected = false;
+    f.group.visible = true;
+    if (f.light) f.light.visible = true;
+  });
+
+  // gate — re-add bars if they were removed
+  if (gateOpen) {
+    gateBars.forEach(function(b) { exitGate.add(b); });
+    collidables.push(gateBox);
+    gateLight.color.setHex(0x44ff44);
+    gateLight.intensity = 2;
+    gateOpen = false;
+  }
+
+  // wraith
+  var wx = 34*TILE+TILE/2, wz = 9*TILE+TILE/2;
+  wraith.x = wx; wraith.z = wz;
+  wraith.root.position.set(wx, 1.2, wz);
+  wraith.speed = 4.2; wraith.t = 0;
+  wraith.active = false; wraith.spawnDelay = 10;
+  wraith.warned = false; wraith.farTimer = 0;
+  wraith.vignette.style.opacity = '0';
+
+  // zone
+  currentZone = -1;
+  scene.fog.color.setHex(0x1a0a04);
+  scene.fog.density = 0.055;
+  ambientLight.color.set(0x664422);
+  ambientLight.intensity = 2.5;
+
+  // hud
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('timer').style.display = 'none';
+  document.getElementById('vignette').style.display = 'none';
+  document.getElementById('compass').style.display = 'none';
+}
+
+function returnToDashboard() {
+  ['dead', 'win-screen'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.remove();
+  });
+  document.getElementById('lb-overlay').style.display = 'none';
+  resetGame();
+  document.getElementById('screen-dashboard').style.display = 'flex';
+  loadDashboardLeaderboard();
 }
 
 // ── Zone System ────────────────────────────────────────────────────────────
@@ -1342,6 +1411,7 @@ function showWin() {
   }).join('');
 
   var w = document.createElement('div');
+  w.id = 'win-screen';
   w.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99;gap:14px;font-family:monospace;';
   w.innerHTML = [
     '<h1 style="font-size:2.6rem;letter-spacing:8px;color:#e8c96d;text-shadow:0 0 30px #e8c96d">SOUL RESTORED</h1>',
@@ -1350,7 +1420,7 @@ function showWin() {
     '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:400px;margin:4px 0;">'+galleryHtml+'</div>',
     '<div style="display:flex;gap:12px;margin-top:8px;">',
     '<button onclick="showLeaderboard()" style="padding:10px 26px;background:transparent;border:1px solid #554422;color:#886633;font-family:monospace;font-size:0.8rem;letter-spacing:3px;cursor:pointer">LEADERBOARD</button>',
-    '<button onclick="location.reload()" style="padding:10px 26px;background:transparent;border:1px solid #e8c96d;color:#e8c96d;font-family:monospace;font-size:0.8rem;letter-spacing:3px;cursor:pointer">HUNT AGAIN</button>',
+    '<button onclick="returnToDashboard()" style="padding:10px 26px;background:transparent;border:1px solid #e8c96d;color:#e8c96d;font-family:monospace;font-size:0.8rem;letter-spacing:3px;cursor:pointer">HUNT AGAIN</button>',
     '</div>'
   ].join('');
   document.body.appendChild(w);
