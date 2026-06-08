@@ -489,15 +489,15 @@ document.getElementById('authContinueBtn').addEventListener('click', function() 
   if (!this.classList.contains('ready')) return;
   var nameInput = document.getElementById('playerNameInput').value.trim().toUpperCase();
   playerName = nameInput || 'ANON';
-  sessionStorage.setItem('nh_wallet', walletAddress);
-  sessionStorage.setItem('nh_name', playerName);
+  localStorage.setItem('nh_wallet', walletAddress);
+  localStorage.setItem('nh_name', playerName);
   showDashboard();
 });
 
 // show auth or restore session
 (function() {
-  var sw = sessionStorage.getItem('nh_wallet');
-  var sn = sessionStorage.getItem('nh_name');
+  var sw = localStorage.getItem('nh_wallet');
+  var sn = localStorage.getItem('nh_name');
   if (sw && sn) {
     walletAddress = sw;
     playerName = sn;
