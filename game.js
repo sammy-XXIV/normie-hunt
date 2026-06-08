@@ -1544,7 +1544,9 @@ var frameCount = 0;
 
 function animate() {
   requestAnimationFrame(animate);
-  var dt = Math.min(clock.getDelta(), 0.05);
+  // flush the delta so a long pause doesn't cause a massive jump
+  var raw = clock.getDelta();
+  var dt = document.hidden ? 0 : Math.min(raw, 0.05);
 
   // movement
   var prev = camera.position.clone();
@@ -1610,6 +1612,10 @@ window.addEventListener('resize', function() {
   renderer.setSize(Math.floor(window.innerWidth/PIXEL_SCALE), Math.floor(window.innerHeight/PIXEL_SCALE));
   renderer.domElement.style.width  = window.innerWidth  + 'px';
   renderer.domElement.style.height = window.innerHeight + 'px';
+});
+
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) clock.getDelta(); // discard accumulated delta on return
 });
 
 animate();
