@@ -337,25 +337,21 @@ window.addEventListener('mousemove', function(e) {
 });
 
 // ── Start button ───────────────────────────────────────────────────────────
-// ── Wallet connect — EIP-6963 multi-wallet detection ─────────────────────
+// ── EIP-6963 multi-wallet detection ───────────────────────────────────────
 var walletAddress = '';
 var eip6963Providers = [];
 
-// collect EIP-6963 announcements
 window.addEventListener('eip6963:announceProvider', function(e) {
   var already = eip6963Providers.some(function(p) { return p.info.uuid === e.detail.info.uuid; });
   if (!already) eip6963Providers.push(e.detail);
 });
-// trigger all installed wallets to announce themselves
 window.dispatchEvent(new Event('eip6963:requestProvider'));
 
 function gatherWallets() {
   var wallets = [];
-  // EIP-6963 wallets (MetaMask, Rabby, Coinbase, OKX, Phantom EVM, etc.)
   eip6963Providers.forEach(function(p) {
     wallets.push({ name: p.info.name, icon: p.info.icon, provider: p.provider });
   });
-  // fallback: window.ethereum.providers array (some older setups)
   if (wallets.length === 0 && window.ethereum) {
     var provs = window.ethereum.providers || [window.ethereum];
     provs.forEach(function(p) {
@@ -375,52 +371,47 @@ function onWalletConnected(addr) {
   walletAddress = addr;
   var short = addr.slice(0,6) + '...' + addr.slice(-4);
   document.getElementById('walletAddress').textContent = short.toUpperCase();
-  document.getElementById('connectWalletBtn').textContent = 'CONNECTED';
-  document.getElementById('connectWalletBtn').style.borderColor = '#44aa66';
-  document.getElementById('connectWalletBtn').style.color = '#44aa66';
-  document.getElementById('nameWrap').style.display = 'flex';
-  var btn = document.getElementById('startBtn');
-  btn.disabled = false;
-  btn.style.opacity = '1';
-  btn.style.cursor = 'pointer';
+  var btn = document.getElementById('connectWalletBtn');
+  btn.textContent = 'CONNECTED ✓';
+  btn.classList.add('connected');
+  // reveal name field
+  var nw = document.getElementById('nameWrap');
+  nw.style.opacity = '1';
+  nw.style.pointerEvents = 'auto';
+  document.getElementById('playerNameInput').focus();
+  // unlock continue button
+  document.getElementById('authContinueBtn').classList.add('ready');
   document.getElementById('wallet-picker').style.display = 'none';
 }
 
 function buildWalletPicker(wallets) {
   var list = document.getElementById('wallet-list');
-  var noWallet = document.getElementById('wallet-no-wallet');
+  var noEl = document.getElementById('wallet-no-wallet');
   list.innerHTML = '';
-  if (wallets.length === 0) {
-    noWallet.style.display = 'block';
-    return;
-  }
-  noWallet.style.display = 'none';
+  if (wallets.length === 0) { noEl.style.display = 'block'; return; }
+  noEl.style.display = 'none';
   wallets.forEach(function(w) {
-    var btn = document.createElement('button');
-    btn.className = 'wallet-option';
-    var iconHtml = w.icon
-      ? '<img src="'+w.icon+'" alt=""/>'
-      : '<div class="wallet-icon-placeholder">◈</div>';
-    btn.innerHTML = iconHtml + '<span>' + w.name.toUpperCase() + '</span>';
-    btn.addEventListener('click', function() {
+    var b = document.createElement('button');
+    b.className = 'wallet-option';
+    var icon = w.icon ? '<img src="'+w.icon+'" alt=""/>' : '<div class="wallet-icon-ph">◈</div>';
+    b.innerHTML = icon + '<span>' + w.name.toUpperCase() + '</span>';
+    b.addEventListener('click', function() {
       w.provider.request({ method: 'eth_requestAccounts' })
-        .then(function(accounts) { onWalletConnected(accounts[0]); })
-        .catch(function(err) { console.error(err); });
+        .then(function(acc) { onWalletConnected(acc[0]); })
+        .catch(function(e) { console.error(e); });
     });
-    list.appendChild(btn);
+    list.appendChild(b);
   });
 }
 
 document.getElementById('connectWalletBtn').addEventListener('click', function() {
-  // re-request announcements in case wallets load late
   window.dispatchEvent(new Event('eip6963:requestProvider'));
   setTimeout(function() {
     var wallets = gatherWallets();
     if (wallets.length === 1) {
-      // only one wallet — connect directly, skip picker
       wallets[0].provider.request({ method: 'eth_requestAccounts' })
-        .then(function(accounts) { onWalletConnected(accounts[0]); })
-        .catch(function(err) { console.error(err); });
+        .then(function(acc) { onWalletConnected(acc[0]); })
+        .catch(function(e) { console.error(e); });
     } else {
       buildWalletPicker(wallets);
       document.getElementById('wallet-picker').style.display = 'flex';
@@ -432,15 +423,53 @@ document.getElementById('wallet-picker-cancel').addEventListener('click', functi
   document.getElementById('wallet-picker').style.display = 'none';
 });
 
-document.getElementById('startBtn').addEventListener('click', function() {
+// AUTH → DASHBOARD
+document.getElementById('authContinueBtn').addEventListener('click', function() {
+  if (!this.classList.contains('ready')) return;
   var nameInput = document.getElementById('playerNameInput').value.trim().toUpperCase();
   playerName = nameInput || 'ANON';
+  var short = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
+  document.getElementById('dash-name').textContent = playerName;
+  document.getElementById('dash-wallet').textContent = short.toUpperCase();
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('screen-dashboard').style.display = 'flex';
+  loadDashboardLeaderboard();
+});
+
+// DASHBOARD LEADERBOARD
+function loadDashboardLeaderboard() {
+  var container = document.getElementById('dash-lb-body');
+  document.getElementById('dash-lb-empty').textContent = 'LOADING...';
+  fetch(SUPA_URL + '/rest/v1/normie_hunt_scores?select=*&order=seconds.asc&limit=15', {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    container.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      container.innerHTML = '<div id="dash-lb-empty">BE THE FIRST TO ESCAPE</div>';
+      return;
+    }
+    rows.forEach(function(e, i) {
+      var shortW = e.wallet && e.wallet !== 'unknown' ? e.wallet.slice(0,6)+'..'+e.wallet.slice(-3) : '';
+      var row = document.createElement('div');
+      row.className = 'lb-row' + (i === 0 ? ' top1' : '');
+      row.innerHTML = '<span class="rank">'+(i+1)+'</span>'
+        + '<div><div class="lb-name">'+e.name+'</div><div class="lb-wallet">'+shortW.toUpperCase()+'</div></div>'
+        + '<span class="lb-time">'+e.time_str+'</span>';
+      container.appendChild(row);
+    });
+  })
+  .catch(function() { document.getElementById('dash-lb-empty').textContent = 'FAILED TO LOAD'; });
+}
+
+// DASHBOARD → GAME
+document.getElementById('enterDungeonBtn').addEventListener('click', function() {
   gameStarted = true;
   sfx.boot();
-  document.getElementById('instructions').style.display = 'none';
+  document.getElementById('screen-dashboard').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('timer').style.display = 'block';
-  document.getElementById('fragment-bar').style.display = 'block';
   document.getElementById('vignette').style.display = 'block';
   document.getElementById('compass').style.display = 'block';
   wraith.active = true;
@@ -448,7 +477,8 @@ document.getElementById('startBtn').addEventListener('click', function() {
   try { renderer.domElement.requestPointerLock(); } catch(e) {}
 });
 
-document.getElementById('lbBtn').addEventListener('click', function() { showLeaderboard(); });
+// LEADERBOARD FULLSCREEN (from win screen)
+document.getElementById('auth-lbBtn').addEventListener('click', function() { showLeaderboard(); });
 document.getElementById('lb-close').addEventListener('click', function() {
   document.getElementById('lb-overlay').style.display = 'none';
 });
