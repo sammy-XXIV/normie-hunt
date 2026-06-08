@@ -1223,31 +1223,53 @@ function collectFragment(f) {
   if (fragmentsCollected >= TOTAL_FRAGMENTS) openGate();
 }
 
+// ── Supabase config ───────────────────────────────────────────────────────
+var SUPA_URL = 'https://zttdlnavawepvhbtldgq.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0dGRsbmF2YXdlcHZoYnRsZGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTE5MTUsImV4cCI6MjA5MDQ2NzkxNX0.nnhpK8uHsbj_MYdrAW1_jXU9kak9llniPtOby6RMQRE';
+var SUPA_HEADERS = {
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+
 function saveToLeaderboard(name, timeStr, seconds) {
-  var lb = JSON.parse(localStorage.getItem('normie_hunt_lb') || '[]');
-  var today = new Date();
-  var dateStr = (today.getMonth()+1)+'/'+today.getDate()+'/'+String(today.getFullYear()).slice(2);
-  lb.push({ name: name, wallet: walletAddress, timeStr: timeStr, seconds: seconds, date: dateStr });
-  lb.sort(function(a,b){ return a.seconds - b.seconds; });
-  lb = lb.slice(0, 20);
-  localStorage.setItem('normie_hunt_lb', JSON.stringify(lb));
+  fetch(SUPA_URL + '/rest/v1/normie_hunt_scores', {
+    method: 'POST',
+    headers: SUPA_HEADERS,
+    body: JSON.stringify({ wallet: walletAddress || 'unknown', name: name, seconds: seconds, time_str: timeStr })
+  }).catch(function(e) { console.error('Leaderboard save failed:', e); });
 }
 
 function showLeaderboard() {
-  var lb = JSON.parse(localStorage.getItem('normie_hunt_lb') || '[]');
   var tbody = document.getElementById('lb-body');
-  tbody.innerHTML = '';
-  if (lb.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="color:#444;text-align:center;padding:20px;letter-spacing:2px;">NO ENTRIES YET</td></tr>';
-  } else {
-    lb.forEach(function(e, i) {
-      var shortW = e.wallet ? e.wallet.slice(0,6)+'..'+e.wallet.slice(-3) : '—';
+  tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:20px;letter-spacing:2px;">LOADING...</td></tr>';
+  document.getElementById('lb-overlay').style.display = 'flex';
+
+  fetch(SUPA_URL + '/rest/v1/normie_hunt_scores?select=*&order=seconds.asc&limit=20', {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    tbody.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:20px;letter-spacing:2px;">NO ENTRIES YET</td></tr>';
+      return;
+    }
+    rows.forEach(function(e, i) {
+      var shortW = e.wallet && e.wallet !== 'unknown' ? e.wallet.slice(0,6)+'..'+e.wallet.slice(-4) : '—';
+      var date = e.created_at ? e.created_at.slice(0,10) : '—';
       var tr = document.createElement('tr');
-      tr.innerHTML = '<td>'+(i+1)+'</td><td>'+e.name+'</td><td style="color:#556644;font-size:0.7rem">'+shortW.toUpperCase()+'</td><td>'+e.timeStr+'</td><td>'+e.date+'</td>';
+      tr.innerHTML = '<td>'+(i+1)+'</td><td>'+e.name+'</td>'
+        +'<td style="color:#556644;font-size:0.7rem">'+shortW.toUpperCase()+'</td>'
+        +'<td>'+e.time_str+'</td><td style="color:#444">'+date+'</td>';
       tbody.appendChild(tr);
     });
-  }
-  document.getElementById('lb-overlay').style.display = 'flex';
+  })
+  .catch(function(e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#663333;text-align:center;padding:20px;">FAILED TO LOAD</td></tr>';
+    console.error(e);
+  });
 }
 
 function showWin() {
