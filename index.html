@@ -106,88 +106,135 @@
 
     .dash-wrap {
       width:100%; height:100%; display:grid;
-      grid-template-rows:56px 1fr 72px;
+      grid-template-rows:52px 1fr 80px;
     }
 
     /* top bar */
     .dash-topbar {
-      border-bottom:1px solid #1a1208;
+      border-bottom:1px solid #161006;
       display:flex; align-items:center; justify-content:space-between;
-      padding:0 32px;
+      padding:0 28px;
     }
-    .dash-topbar .logo { color:#e8c96d; font-size:1rem; letter-spacing:8px; }
+    .dash-topbar .logo { color:#e8c96d; font-size:0.82rem; letter-spacing:8px; }
     .dash-topbar .player-chip {
-      display:flex; align-items:center; gap:10px;
-      color:#888; font-size:0.72rem; letter-spacing:2px;
+      display:flex; align-items:center; gap:14px;
     }
-    .dash-topbar .player-chip .pname { color:#e8c96d; }
-    .dash-topbar .player-chip .pwallet { color:#44aa66; font-size:0.65rem; }
+    .dash-topbar .player-chip .pname {
+      color:#e8c96d; font-size:0.78rem; letter-spacing:3px;
+    }
+    .dash-topbar .player-chip .pwallet {
+      color:#2a6640; font-size:0.65rem; letter-spacing:1px;
+      background:#0a1a0e; border:1px solid #1a3322;
+      padding:3px 8px;
+    }
 
     /* main area */
     .dash-main {
-      display:grid; grid-template-columns:1fr 380px;
-      gap:0; overflow:hidden;
-    }
-
-    /* left panel — lore + art */
-    .dash-left {
-      border-right:1px solid #111;
-      display:flex; flex-direction:column; justify-content:center;
-      align-items:center; gap:18px; padding:40px;
-    }
-    .dash-left .big-title {
-      font-size:3.2rem; letter-spacing:14px; color:#e8c96d;
-      text-shadow:0 0 40px #e8c96d44; text-align:center; line-height:1.2;
-    }
-    .dash-left .lore-text {
-      color:#555; font-size:0.8rem; letter-spacing:2px; line-height:2;
-      text-align:center; max-width:380px;
-    }
-    .dash-left .lore-text span { color:#887744; }
-    .dash-stats {
-      display:flex; gap:28px; margin-top:4px;
-    }
-    .dash-stat { text-align:center; }
-    .dash-stat .val { color:#e8c96d; font-size:1.3rem; letter-spacing:3px; }
-    .dash-stat .lbl { color:#333; font-size:0.6rem; letter-spacing:3px; margin-top:3px; }
-
-    /* right panel — leaderboard */
-    .dash-right {
-      display:flex; flex-direction:column; padding:24px 24px 0;
+      display:grid; grid-template-columns:1fr 420px;
       overflow:hidden;
     }
-    .dash-right h3 {
-      color:#444; font-size:0.65rem; letter-spacing:6px;
-      border-bottom:1px solid #111; padding-bottom:10px; margin-bottom:0;
+
+    /* ── left panel ── */
+    .dash-left {
+      border-right:1px solid #0f0f0f;
+      display:flex; flex-direction:column;
+      padding:36px 44px; gap:0; overflow:hidden;
     }
-    #dash-lb-body { overflow-y:auto; flex:1; }
-    #dash-lb-body::-webkit-scrollbar { width:3px; }
-    #dash-lb-body::-webkit-scrollbar-thumb { background:#221a08; }
+
+    .dash-eyebrow {
+      color:#3a2a0a; font-size:0.6rem; letter-spacing:6px; margin-bottom:14px;
+    }
+
+    .dash-left .big-title {
+      font-size:2.6rem; letter-spacing:10px; color:#e8c96d;
+      text-shadow:0 0 60px #e8c96d33; line-height:1.15;
+      margin-bottom:22px;
+    }
+
+    .dash-divider {
+      width:48px; height:1px; background:#2a1a06; margin-bottom:22px;
+    }
+
+    .dash-left .lore-text {
+      color:#4a4030; font-size:0.75rem; letter-spacing:1.5px; line-height:2.1;
+      margin-bottom:28px;
+    }
+    .dash-left .lore-text em { color:#7a6030; font-style:normal; }
+
+    /* stat cards */
+    .dash-stats {
+      display:flex; gap:0; border:1px solid #1a1208; margin-bottom:0;
+    }
+    .dash-stat {
+      flex:1; padding:14px 0; text-align:center;
+      border-right:1px solid #1a1208;
+    }
+    .dash-stat:last-child { border-right:none; }
+    .dash-stat .val {
+      color:#e8c96d; font-size:1.6rem; letter-spacing:4px;
+      display:block; margin-bottom:5px;
+    }
+    .dash-stat .lbl {
+      color:#3a2a08; font-size:0.58rem; letter-spacing:4px; display:block;
+    }
+
+    /* ── right panel — leaderboard ── */
+    .dash-right {
+      display:flex; flex-direction:column; overflow:hidden;
+      background:#020202;
+    }
+    .dash-lb-header {
+      padding:18px 24px 14px;
+      border-bottom:1px solid #0f0f0f;
+      display:flex; align-items:baseline; justify-content:space-between;
+    }
+    .dash-lb-header h3 {
+      color:#2a2010; font-size:0.6rem; letter-spacing:6px; margin:0;
+    }
+    .dash-lb-header .lb-sub { color:#1a1208; font-size:0.58rem; letter-spacing:2px; }
+    #dash-lb-body { overflow-y:auto; flex:1; padding:0 8px; }
+    #dash-lb-body::-webkit-scrollbar { width:2px; }
+    #dash-lb-body::-webkit-scrollbar-thumb { background:#1a1208; }
+
     .lb-row {
-      display:grid; grid-template-columns:28px 1fr 60px;
-      padding:9px 4px; border-bottom:1px solid #0d0d0d;
-      font-size:0.75rem; letter-spacing:2px; align-items:center;
+      display:grid; grid-template-columns:32px 1fr auto;
+      padding:11px 16px; border-bottom:1px solid #080808;
+      font-size:0.73rem; letter-spacing:1.5px; align-items:center;
+      gap:8px;
     }
-    .lb-row .rank { color:#333; }
-    .lb-row .lb-name { color:#aaa; }
-    .lb-row .lb-time { color:#e8c96d; text-align:right; }
-    .lb-row.top1 .lb-name { color:#e8c96d; }
+    .lb-row:hover { background:#0a0a08; }
+    .lb-row .rank { color:#222; font-size:0.65rem; }
+    .lb-row .lb-name { color:#666; }
+    .lb-row .lb-wallet { color:#1e3322; font-size:0.58rem; letter-spacing:1px; margin-top:2px; }
+    .lb-row .lb-time { color:#aa8833; letter-spacing:3px; text-align:right; font-size:0.8rem; }
+    .lb-row.top1 { background:#0d0900; }
     .lb-row.top1 .rank { color:#e8c96d; }
-    .lb-row .lb-wallet { color:#335533; font-size:0.6rem; letter-spacing:1px; }
-    #dash-lb-empty { color:#333; font-size:0.72rem; letter-spacing:3px; text-align:center; padding:30px 0; }
+    .lb-row.top1 .lb-name { color:#e8c96d; }
+    .lb-row.top1 .lb-time { color:#e8c96d; }
+    #dash-lb-empty {
+      color:#1e1a10; font-size:0.7rem; letter-spacing:3px;
+      text-align:center; padding:40px 0;
+    }
 
     /* bottom bar */
     .dash-bottombar {
-      border-top:1px solid #1a1208;
-      display:flex; align-items:center; justify-content:center; gap:20px;
+      border-top:1px solid #0f0f0f;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 28px;
+    }
+    .dash-controls {
+      color:#1e1a10; font-size:0.62rem; letter-spacing:3px; line-height:2;
     }
     #enterDungeonBtn {
-      padding:14px 52px; background:transparent;
-      border:1px solid #e8c96d; color:#e8c96d;
-      font-family:'Courier New',monospace; font-size:1rem;
-      letter-spacing:6px; cursor:pointer; transition:all 0.2s;
+      padding:0 44px; height:46px; background:transparent;
+      border:1px solid #554422; color:#aa7733;
+      font-family:'Courier New',monospace; font-size:0.82rem;
+      letter-spacing:5px; cursor:pointer; transition:all 0.25s;
     }
-    #enterDungeonBtn:hover { background:#e8c96d14; }
+    #enterDungeonBtn:hover {
+      border-color:#e8c96d; color:#e8c96d; background:#e8c96d0a;
+      box-shadow:0 0 20px #e8c96d18;
+    }
 
     /* ══════════════════════════════
        GAME HUD
@@ -280,31 +327,50 @@
 
       <div class="dash-main">
         <div class="dash-left">
+          <div class="dash-eyebrow">NORMIES NFT — HACKATHON BUILD</div>
           <div class="big-title">THE<br>DUNGEON<br>AWAITS</div>
+          <div class="dash-divider"></div>
           <p class="lore-text">
             Normies are pixel souls trapped on-chain.<br>
-            Someone fragmented one and scattered<br>
-            the pieces across a dark dungeon.<br>
-            <span>You are the hunter.</span><br>
-            Reassemble the soul — before it's too late.
+            Someone fragmented one and scattered the pieces<br>
+            across a cursed dungeon. A wraith guards the dark.<br>
+            <em>Collect every fragment. Survive. Escape.</em>
           </p>
           <div class="dash-stats">
-            <div class="dash-stat"><div class="val">6</div><div class="lbl">NORMIES</div></div>
-            <div class="dash-stat"><div class="val">1</div><div class="lbl">MIMIC</div></div>
-            <div class="dash-stat"><div class="val">∞</div><div class="lbl">TRAPS</div></div>
+            <div class="dash-stat">
+              <span class="val">6</span>
+              <span class="lbl">NORMIES</span>
+            </div>
+            <div class="dash-stat">
+              <span class="val">1</span>
+              <span class="lbl">MIMIC</span>
+            </div>
+            <div class="dash-stat">
+              <span class="val">3</span>
+              <span class="lbl">HEARTS</span>
+            </div>
+            <div class="dash-stat">
+              <span class="val">∞</span>
+              <span class="lbl">TRAPS</span>
+            </div>
           </div>
         </div>
 
         <div class="dash-right">
-          <h3>LEADERBOARD</h3>
+          <div class="dash-lb-header">
+            <h3>LEADERBOARD</h3>
+            <span class="lb-sub">FASTEST ESCAPES</span>
+          </div>
           <div id="dash-lb-body">
-            <div id="dash-lb-empty">LOADING...</div>
+            <div id="dash-lb-empty">BE THE FIRST TO ESCAPE</div>
           </div>
         </div>
       </div>
 
       <div class="dash-bottombar">
-        <p style="color:#333;font-size:0.7rem;letter-spacing:3px;">WASD — MOVE &nbsp;·&nbsp; MOUSE — LOOK</p>
+        <div class="dash-controls">
+          WASD · MOVE &nbsp;&nbsp; MOUSE · LOOK &nbsp;&nbsp; ESC · CURSOR
+        </div>
         <button id="enterDungeonBtn">ENTER THE DUNGEON</button>
       </div>
 
