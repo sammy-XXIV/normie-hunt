@@ -236,6 +236,27 @@
       box-shadow:0 0 20px #e8c96d18;
     }
 
+    /* collection grid */
+    #collection-grid {
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .col-slot {
+      width:64px; height:64px; border:1px solid #2a1a08;
+      background:#080604; display:flex; align-items:center;
+      justify-content:center; position:relative;
+    }
+    .col-slot img {
+      width:64px; height:64px; image-rendering:pixelated;
+    }
+    .col-slot .col-id {
+      position:absolute; bottom:2px; right:4px;
+      color:#554422; font-size:0.5rem; letter-spacing:1px;
+    }
+    .col-slot.empty { opacity:0.25; }
+    .col-slot.empty::after {
+      content:'?'; color:#332211; font-size:1.4rem;
+    }
+
     /* ══════════════════════════════
        GAME HUD
     ══════════════════════════════ */
@@ -353,6 +374,11 @@
               <span class="val">∞</span>
               <span class="lbl">TRAPS</span>
             </div>
+          </div>
+
+          <div id="collection-wrap" style="display:none;margin-top:24px;">
+            <div class="dash-eyebrow" style="margin-bottom:12px;">YOUR RESCUED NORMIES — LEVEL 1</div>
+            <div id="collection-grid"></div>
           </div>
         </div>
 

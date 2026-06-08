@@ -434,6 +434,32 @@ function showDashboard() {
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-dashboard').style.display = 'flex';
   loadDashboardLeaderboard();
+  loadProfileCollection();
+}
+
+function loadProfileCollection() {
+  loadProfile(function(profile) {
+    var wrap = document.getElementById('collection-wrap');
+    var grid = document.getElementById('collection-grid');
+    if (!profile || !profile.token_ids || profile.token_ids.length === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+    var ids = profile.token_ids; // e.g. [1,2,3,4,5,6]
+    var levelIds = [1,2,3,4,5,6]; // level 1 token IDs
+    grid.innerHTML = '';
+    levelIds.forEach(function(id) {
+      var slot = document.createElement('div');
+      var collected = ids.indexOf(id) !== -1;
+      slot.className = 'col-slot' + (collected ? '' : ' empty');
+      if (collected) {
+        slot.innerHTML = '<img src="https://api.normies.art/normie/'+id+'/image.png" crossorigin="anonymous"/>'
+          + '<span class="col-id">#'+id+'</span>';
+      }
+      grid.appendChild(slot);
+    });
+    wrap.style.display = 'block';
+  });
 }
 
 // AUTH → DASHBOARD
@@ -616,6 +642,7 @@ function returnToDashboard() {
   resetGame();
   document.getElementById('screen-dashboard').style.display = 'flex';
   loadDashboardLeaderboard();
+  loadProfileCollection();
 }
 
 // ── Zone System ────────────────────────────────────────────────────────────
@@ -1290,13 +1317,13 @@ function makeNormie(x, z, isMimic, tokenId) {
   fragments.push({ group:group, x:x, z:z, t:Math.random()*Math.PI*2, collected:false, isMimic:!!isMimic, light:nLight, tokenId:tokenId });
 }
 
-makeNormie(4*TILE,  2*TILE,  false, 42);    // top-left room
-makeNormie(34*TILE, 2*TILE,  false, 7438);  // top-center (has hat)
-makeNormie(68*TILE, 4*TILE,  false, 4908);  // top-right room
-makeNormie(5*TILE,  12*TILE, false, 1337);  // left section mid
-makeNormie(34*TILE, 13*TILE, false, 3081);  // mid section lower (bowler hat)
-makeNormie(65*TILE, 11*TILE, false, 777);   // right section
-makeNormie(34*TILE, 7*TILE,  true,  9987);  // MIMIC — looks like a real Normie
+makeNormie(4*TILE,  2*TILE,  false, 1);     // Normie #1 — top-left room
+makeNormie(34*TILE, 2*TILE,  false, 2);     // Normie #2 — top-center
+makeNormie(68*TILE, 4*TILE,  false, 3);     // Normie #3 — top-right room
+makeNormie(5*TILE,  12*TILE, false, 4);     // Normie #4 — left section mid
+makeNormie(34*TILE, 13*TILE, false, 5);     // Normie #5 — mid section lower
+makeNormie(65*TILE, 11*TILE, false, 6);     // Normie #6 — right section
+makeNormie(34*TILE, 7*TILE,  true,  null);  // MIMIC — no real token ID
 
 function updateFragments(dt) {
   var px = camera.position.x, pz = camera.position.z;
@@ -1362,6 +1389,39 @@ function saveToLeaderboard(name, timeStr, seconds) {
   }).catch(function(e) { console.error('Leaderboard save failed:', e); });
 }
 
+function saveProfile(tokenIds, seconds) {
+  var wallet = walletAddress || 'unknown';
+  fetch(SUPA_URL + '/rest/v1/normie_hunt_collection?wallet=eq.' + wallet, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    var existing = (rows && rows[0] && rows[0].token_ids) ? rows[0].token_ids : [];
+    var merged = existing.slice();
+    tokenIds.forEach(function(id) { if (merged.indexOf(id) === -1) merged.push(id); });
+    var bestSecs = (rows && rows[0] && rows[0].best_seconds)
+      ? Math.min(rows[0].best_seconds, seconds) : seconds;
+    var runs = (rows && rows[0]) ? (rows[0].runs_completed || 0) + 1 : 1;
+    var upsertHeaders = Object.assign({}, SUPA_HEADERS, { 'Prefer': 'resolution=merge-duplicates' });
+    return fetch(SUPA_URL + '/rest/v1/normie_hunt_collection', {
+      method: 'POST', headers: upsertHeaders,
+      body: JSON.stringify({ wallet: wallet, name: playerName, token_ids: merged,
+        best_seconds: bestSecs, runs_completed: runs })
+    });
+  })
+  .catch(function(e) { console.error('Profile save failed:', e); });
+}
+
+function loadProfile(callback) {
+  var wallet = walletAddress || 'unknown';
+  fetch(SUPA_URL + '/rest/v1/normie_hunt_collection?wallet=eq.' + wallet, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) { callback(rows && rows[0] ? rows[0] : null); })
+  .catch(function() { callback(null); });
+}
+
 function showLeaderboard() {
   var tbody = document.getElementById('lb-body');
   tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:20px;letter-spacing:2px;">LOADING...</td></tr>';
@@ -1401,6 +1461,8 @@ function showWin() {
   var timeStr = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
 
   saveToLeaderboard(playerName, timeStr, Math.floor(elapsed));
+  var collectedIds = fragments.filter(function(f){ return f.collected && !f.isMimic && f.tokenId; }).map(function(f){ return f.tokenId; });
+  saveProfile(collectedIds, Math.floor(elapsed));
 
   // build gallery of collected normies
   var collectedTokens = fragments.filter(function(f){ return f.collected && !f.isMimic && f.tokenId !== undefined; });
