@@ -343,6 +343,9 @@ window.addEventListener('mousemove', function(e) {
 // ── Start button ───────────────────────────────────────────────────────────
 // ── EIP-6963 multi-wallet detection ───────────────────────────────────────
 var walletAddress = '';
+var walletProvider = null;
+var hasNFTBoost = false;
+var NORMIES_CONTRACT = '0x9Eb6E2025B64f340691e424b7fe7022fFDE12438';
 var eip6963Providers = [];
 
 window.addEventListener('eip6963:announceProvider', function(e) {
@@ -371,8 +374,27 @@ function gatherWallets() {
   return wallets;
 }
 
-function onWalletConnected(addr) {
+function checkNFTBoost() {
+  if (!walletProvider || !walletAddress) return;
+  var padded = walletAddress.replace('0x','').toLowerCase().padStart(64,'0');
+  walletProvider.request({
+    method: 'eth_call',
+    params: [{ to: NORMIES_CONTRACT, data: '0x70a08231' + padded }, 'latest']
+  }).then(function(result) {
+    hasNFTBoost = !!result && parseInt(result, 16) > 0;
+    updateBoostBadge();
+  }).catch(function() { hasNFTBoost = false; updateBoostBadge(); });
+}
+
+function updateBoostBadge() {
+  var badge = document.getElementById('boost-badge');
+  if (!badge) return;
+  badge.style.display = hasNFTBoost ? 'flex' : 'none';
+}
+
+function onWalletConnected(addr, provider) {
   walletAddress = addr;
+  if (provider) { walletProvider = provider; checkNFTBoost(); }
   var short = addr.slice(0,6) + '...' + addr.slice(-4);
   document.getElementById('walletAddress').textContent = short.toUpperCase();
   var btn = document.getElementById('connectWalletBtn');
@@ -401,7 +423,7 @@ function buildWalletPicker(wallets) {
     b.innerHTML = icon + '<span>' + w.name.toUpperCase() + '</span>';
     b.addEventListener('click', function() {
       w.provider.request({ method: 'eth_requestAccounts' })
-        .then(function(acc) { onWalletConnected(acc[0]); })
+        .then(function(acc) { onWalletConnected(acc[0], w.provider); })
         .catch(function(e) { console.error(e); });
     });
     list.appendChild(b);
@@ -414,7 +436,7 @@ document.getElementById('connectWalletBtn').addEventListener('click', function()
     var wallets = gatherWallets();
     if (wallets.length === 1) {
       wallets[0].provider.request({ method: 'eth_requestAccounts' })
-        .then(function(acc) { onWalletConnected(acc[0]); })
+        .then(function(acc) { onWalletConnected(acc[0], wallets[0].provider); })
         .catch(function(e) { console.error(e); });
     } else {
       buildWalletPicker(wallets);
@@ -480,6 +502,7 @@ document.getElementById('authContinueBtn').addEventListener('click', function() 
     walletAddress = sw;
     playerName = sn;
     showDashboard();
+    checkNFTBoost(); // re-check boost (provider may be injected again)
   } else {
     document.getElementById('screen-auth').style.display = 'flex';
   }
@@ -516,6 +539,15 @@ function loadDashboardLeaderboard() {
 document.getElementById('enterDungeonBtn').addEventListener('click', function() {
   gameStarted = true;
   sfx.boot();
+
+  // apply NFT boost if holder
+  if (hasNFTBoost) {
+    hp = 4;
+    document.getElementById('h4').style.display = 'inline';
+    SPEED = 6.2;
+    wraith.spawnDelay = 18;
+  }
+
   document.getElementById('screen-dashboard').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('timer').style.display = 'block';
@@ -588,6 +620,8 @@ function resetGame() {
   // health
   hp = 3; invincible = 0;
   ['h1','h2','h3'].forEach(function(id){ document.getElementById(id).style.color='#cc3333'; });
+  hp = 3; document.getElementById('h4').style.display = 'none';
+  SPEED = 5;
 
   // flags
   isDead = false; gameStarted = false; elapsed = 0; timerRunning = false;
