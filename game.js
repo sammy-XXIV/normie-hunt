@@ -590,10 +590,12 @@ function takeDamage() {
   sfx.damage();
   document.body.style.background = '#ff0000';
   setTimeout(function(){ document.body.style.background = '#000'; }, 120);
-  // update hearts
-  var hearts = ['h1','h2','h3'];
-  for (var i=0; i<3; i++) {
-    document.getElementById(hearts[i]).style.color = i < hp ? '#cc3333' : '#333';
+  // update hearts (supports 3 or 4 depending on boost)
+  var hearts = ['h1','h2','h3','h4'];
+  var maxHp = hasNFTBoost ? 4 : 3;
+  for (var i = 0; i < maxHp; i++) {
+    var el = document.getElementById(hearts[i]);
+    if (el) el.style.color = i < hp ? (i === 3 ? '#cc44ff' : '#cc3333') : '#333';
   }
   if (hp <= 0) die();
 }
@@ -620,7 +622,7 @@ function resetGame() {
   // health
   hp = 3; invincible = 0;
   ['h1','h2','h3'].forEach(function(id){ document.getElementById(id).style.color='#cc3333'; });
-  hp = 3; document.getElementById('h4').style.display = 'none';
+  hp = 3; invincible = 0; document.getElementById('h4').style.display = 'none';
   SPEED = 5;
 
   // flags
@@ -927,8 +929,8 @@ function updateBears(dt) {
 function makeBlade(x, z, speed) {
   var pivot = new THREE.Object3D();
   pivot.position.set(x, 1.4, z);
-  var b1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 0.18), bladeMat);
-  var b2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 1.8), bladeMat);
+  var b1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 0.18), glowBlade);
+  var b2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 1.8), glowBlade);
   var center = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.2,8), new THREE.MeshLambertMaterial({color:0x666688}));
   pivot.add(b1); pivot.add(b2); pivot.add(center);
   // pole
