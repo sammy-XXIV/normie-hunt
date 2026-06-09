@@ -634,6 +634,7 @@ function resetGame() {
   document.getElementById('frag-count').textContent = '0 / ' + TOTAL_FRAGMENTS;
   fragments.forEach(function(f) {
     f.collected = false;
+    scene.add(f.group);
     f.group.visible = true;
     if (f.light) f.light.visible = true;
   });
@@ -1275,10 +1276,35 @@ exitGate.add(gateLight);
 exitGate.position.set(EXIT_X, 1.9, EXIT_Z);
 scene.add(exitGate);
 
+// stone walls filling corridor on both sides of the gate (corridor is col64–74, gate only 2 tiles wide)
+var _gfLeftX  = 63*TILE + TILE/2;   // right edge of west corridor wall = 190.5
+var _gfRightX = 75*TILE - TILE/2;   // left edge of east corridor wall  = 223.5
+var _gfBarL   = EXIT_X - TILE;      // left edge of gate bars  = 213
+var _gfBarR   = EXIT_X + TILE;      // right edge of gate bars = 219
+// left fill
+var _gfLW = _gfBarL - _gfLeftX;    // 22.5
+var leftFillMesh = new THREE.Mesh(new THREE.BoxGeometry(_gfLW, 3.8, 0.32), gateStoneMat);
+leftFillMesh.position.set((_gfLeftX + _gfBarL) / 2, 1.9, EXIT_Z);
+scene.add(leftFillMesh);
+// right fill
+var _gfRW = _gfRightX - _gfBarR;   // 4.5
+var rightFillMesh = new THREE.Mesh(new THREE.BoxGeometry(_gfRW, 3.8, 0.32), gateStoneMat);
+rightFillMesh.position.set((_gfBarR + _gfRightX) / 2, 1.9, EXIT_Z);
+scene.add(rightFillMesh);
+// permanent side-wall collisions (never removed when gate opens)
+collidables.push(new THREE.Box3(
+  new THREE.Vector3(_gfLeftX, 0, EXIT_Z - 0.5),
+  new THREE.Vector3(_gfBarL,  3.8, EXIT_Z + 0.5)
+));
+collidables.push(new THREE.Box3(
+  new THREE.Vector3(_gfBarR,  0, EXIT_Z - 0.5),
+  new THREE.Vector3(_gfRightX, 3.8, EXIT_Z + 0.5)
+));
+
 // ── green grass backdrop — daylight visible through the bars ──────────────
 var _grassMat = new THREE.MeshBasicMaterial({ color: 0x22dd44, side: THREE.DoubleSide });
-var grassBg = new THREE.Mesh(new THREE.PlaneGeometry(TILE*2, 3.8), _grassMat);
-grassBg.position.set(EXIT_X, 1.9, EXIT_Z - 0.28);  // just behind the bars
+var grassBg = new THREE.Mesh(new THREE.PlaneGeometry(_gfRightX - _gfLeftX, 3.8), _grassMat);
+grassBg.position.set((_gfLeftX + _gfRightX) / 2, 1.9, EXIT_Z - 0.28);
 scene.add(grassBg);
 
 // soft green light bleeding through from outside
