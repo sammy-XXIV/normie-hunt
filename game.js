@@ -397,6 +397,16 @@ function onWalletConnected(addr, provider) {
   if (provider) { walletProvider = provider; checkNFTBoost(); }
   var short = addr.slice(0,6) + '...' + addr.slice(-4);
   document.getElementById('walletAddress').textContent = short.toUpperCase();
+
+  // returning player — skip name entry
+  var savedWallet = localStorage.getItem('nh_wallet');
+  var savedName   = localStorage.getItem('nh_name');
+  if (savedWallet && savedWallet.toLowerCase() === addr.toLowerCase() && savedName) {
+    playerName = savedName;
+    showDashboard();
+    return;
+  }
+
   var btn = document.getElementById('connectWalletBtn');
   btn.textContent = 'CONNECTED ✓';
   btn.classList.add('connected');
