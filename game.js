@@ -460,16 +460,19 @@ function showDashboard() {
 }
 
 function loadProfileCollection() {
+  var wrap = document.getElementById('collection-wrap');
+  var grid = document.getElementById('collection-grid');
   loadProfile(function(profile) {
-    var wrap = document.getElementById('collection-wrap');
-    var grid = document.getElementById('collection-grid');
-    if (!profile || !profile.token_ids || profile.token_ids.length === 0) {
-      wrap.style.display = 'none';
+    var ids = (profile && profile.token_ids) ? profile.token_ids : [];
+    var levelIds = [1,2,3,4,5,6];
+    grid.innerHTML = '';
+    if (ids.length === 0) {
+      var empty = document.createElement('div');
+      empty.style.cssText = 'color:#4a3a1a;font-size:0.62rem;letter-spacing:3px;padding:16px 0;';
+      empty.textContent = 'RESCUE ALL 6 NORMIES TO COMPLETE YOUR COLLECTION';
+      grid.appendChild(empty);
       return;
     }
-    var ids = profile.token_ids; // e.g. [1,2,3,4,5,6]
-    var levelIds = [1,2,3,4,5,6]; // level 1 token IDs
-    grid.innerHTML = '';
     levelIds.forEach(function(id) {
       var slot = document.createElement('div');
       var collected = ids.indexOf(id) !== -1;
@@ -480,7 +483,6 @@ function loadProfileCollection() {
       }
       grid.appendChild(slot);
     });
-    wrap.style.display = 'block';
   });
 }
 

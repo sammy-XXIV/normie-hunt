@@ -127,6 +127,12 @@
       background:#0a1a0e; border:1px solid #1a4422;
       padding:3px 8px;
     }
+    #profileBtn {
+      background:none; border:1px solid #3a2a0a; color:#a08840;
+      font-family:inherit; font-size:0.62rem; letter-spacing:4px;
+      padding:5px 12px; cursor:pointer; transition:all .2s;
+    }
+    #profileBtn:hover { border-color:#e8c96d; color:#e8c96d; }
 
     /* main area */
     .dash-main {
@@ -138,7 +144,7 @@
     .dash-left {
       border-right:1px solid #0f0f0f;
       display:flex; flex-direction:column;
-      padding:36px 44px; gap:0; overflow:hidden;
+      padding:36px 44px; gap:0; overflow-y:auto;
     }
 
     .dash-eyebrow {
@@ -340,9 +346,12 @@
 
       <div class="dash-topbar">
         <span class="logo">NORMIE HUNT</span>
-        <div class="player-chip">
-          <span class="pname" id="dash-name">—</span>
-          <span class="pwallet" id="dash-wallet">—</span>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <button id="profileBtn" onclick="document.getElementById('collection-wrap').scrollIntoView({behavior:'smooth'})">◈ MY NORMIES</button>
+          <div class="player-chip">
+            <span class="pname" id="dash-name">—</span>
+            <span class="pwallet" id="dash-wallet">—</span>
+          </div>
         </div>
       </div>
 
@@ -375,7 +384,7 @@
             </div>
           </div>
 
-          <div id="collection-wrap" style="display:none;margin-top:24px;">
+          <div id="collection-wrap" style="margin-top:24px;">
             <div class="dash-eyebrow" style="margin-bottom:12px;">YOUR RESCUED NORMIES — LEVEL 1</div>
             <div id="collection-grid"></div>
           </div>
